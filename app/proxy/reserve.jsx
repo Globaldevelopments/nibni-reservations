@@ -1,39 +1,23 @@
-import { authenticate } from '~/shopify.server';
-import { json } from '@remix-run/node';
+// app/routes/apps/reserve.tsx
+import { json } from "@remix-run/node";
+import { useLoaderData } from "@remix-run/react";
 
-export async function loader({ request }) {
-  await authenticate.public.appProxy(request);
-
+export async function loader({ request }: { request: Request }) {
   const url = new URL(request.url);
-  const email = url.searchParams.get('email') || (await request.json()).email;
-  const handle = url.searchParams.get('handle') || (await request.json()).handle;
-  const title = url.searchParams.get('title') || (await request.json()).title;
+  const productId = url.searchParams.get("productId");
+  const customerId = url.searchParams.get("customerId");
 
-  if (!email || !handle || !title) {
-    return json({ success: false, message: 'Missing required fields: email, handle, title' }, { status: 400 });
-  }
-
-  try {
-    const response = await fetch('https://nibni-reservations.onrender.com/apps/reserve', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email, handle, title }),
-    });
-
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.error || 'Server error');
-    }
-
-    return json({ success: true, updateResult: data.updateResult });
-  } catch (error) {
-    console.error('Proxy error:', error);
-    return json({ success: false, message: error.message }, { status: 500 });
-  }
+  return json({ productId, customerId });
 }
 
-export default function ReserveProxy() {
-  return null;
+export default function ReservePage() {
+  const data = useLoaderData<typeof loader>();
+
+  return (
+    <div style={{ padding: 40, fontSize: 24 }}>
+      <h1>Reservation Page</h1>
+      <p><strong>Product ID:</strong> {data.productId}</p>
+      <p><strong>Customer ID:</strong> {data.customerId}</p>
+    </div>
+  );
 }
